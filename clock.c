@@ -2,21 +2,21 @@
 
 #include "clock.h"
 
-#define OFS_LEFT_X 31
-#define OFS_MID_X 63
+#define OFS_LEFT_X  31
+#define OFS_MID_X   63
 #define OFS_RIGHT_X 96
-#define OFS_Y 31
+#define OFS_Y       31
 
-#define H_RAD 17
-#define M_RAD 26
-#define S_RAD 29
+#define H_RAD   17
+#define M_RAD   26
+#define S_RAD   29
 #define HMS_OFS 8
 
-#define FACE_RADIUS 31
+#define FACE_RADIUS        31
 #define FACE_DEFAULT_WIDTH 54
 
 const char* WEEKDAYS[] =
-    {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
 const char* MONTHS[] =
     {"JAN", "FEB", "MAR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
@@ -177,7 +177,8 @@ void draw_analog_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t 
             draw_line(canvas, cfg->ofs_x, m, CopyBoth);
         }
     }
-    for(; i < 14; i++, m++) draw_line(canvas, cfg->ofs_x, m, CopyBoth);
+    for(; i < 14; i++, m++)
+        draw_line(canvas, cfg->ofs_x, m, CopyBoth);
     draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[0], CopyVer);
     draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[15], CopyHor);
     float s_ang = M_TWOPI / 60.0 * dt->second + M_TWOPI / 60000.0 * ms;
@@ -189,11 +190,22 @@ void draw_analog_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t 
     canvas_draw_disc(canvas, cfg->ofs_x, OFS_Y, 2);
 }
 
+// Using Zeller's Congruence for the Julian calendar
+int get_weekday(int year, int month, int day) {
+    if(month < 3) {
+        month += 12;
+        year -= 1;
+    }
+    int K = year % 100;
+    int J = year / 100;
+    return (day + 13 * (month + 1) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;
+}
+
 void draw_date(Canvas* canvas, DateTime* dt) {
     static char day[3];
     snprintf(day, 3, "%2u", dt->day % 32);
     const char* month = MONTHS[(dt->month - 1) % 12];
-    const char* weekday = WEEKDAYS[(dt->weekday - 1) % 7];
+    const char* weekday = WEEKDAYS[get_weekday(dt->year, dt->month, dt->day) % 7];
     int8_t ofs_x = 2;
     Align d_align = AlignLeft;
     Align m_align = AlignRight;
