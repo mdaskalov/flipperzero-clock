@@ -134,11 +134,17 @@ void draw_digital_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t
         char* pm = hour >= 12 ? "PM" : "AM";
         hour = hour % 12 == 0 ? 12 : hour % 12;
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y - 10, AlignCenter, AlignBottom, pm);
+        canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y + 10, AlignCenter, AlignTop, pm);
     }
     snprintf(buf, 6, "%2u:%02u", hour % 24, dt->minute % 60);
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y, AlignCenter, AlignCenter, buf);
+    
+    static char batt_buf[5];
+    snprintf(batt_buf, 5, "%u%%", cfg->battery_pct);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
+    
     if(cfg->face_type == DigitalRectangular) {
         for(uint8_t i = 0; i < 45; i++)
             draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[(dt->second - i + 60) % 60], Normal);
@@ -235,6 +241,7 @@ void init_clock_config(ClockConfig* cfg) {
     cfg->digits_mod = 3;
     cfg->face_type = Rectangular;
     cfg->ofs_x = OFS_MID_X;
+    cfg->battery_pct = 0;
 }
 
 void modify_clock_up(ClockConfig* cfg) {
