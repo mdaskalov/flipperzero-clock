@@ -207,7 +207,7 @@ int get_weekday(int year, int month, int day) {
     return (day + 13 * (month + 1) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;
 }
 
-void draw_date(Canvas* canvas, DateTime* dt) {
+void draw_date(Canvas* canvas, DateTime* dt, ClockConfig* cfg) {
     static char day[3];
     snprintf(day, 3, "%2u", dt->day % 32);
     const char* month = MONTHS[(dt->month - 1) % 12];
@@ -217,6 +217,14 @@ void draw_date(Canvas* canvas, DateTime* dt) {
     Align m_align = AlignRight;
     if(locale_get_date_format() == LocaleDateFormatDMY)
         ofs_x = -2, d_align = AlignRight, m_align = AlignLeft;
+    
+    if(cfg->face_type != DigitalRectangular && cfg->face_type != DigitalRound) {
+        static char batt_buf[5];
+        snprintf(batt_buf, 5, "%u%%", cfg->battery_pct);
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, OFS_RIGHT_X, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
+    }
+    
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(canvas, OFS_RIGHT_X + ofs_x, OFS_Y, d_align, AlignCenter, day);
     canvas_set_font(canvas, FontPrimary);
@@ -231,7 +239,7 @@ void draw_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t ms) {
         draw_digital_clock(canvas, cfg, dt, ms);
     else
         draw_analog_clock(canvas, cfg, dt, ms);
-    if(cfg->split) draw_date(canvas, dt);
+    if(cfg->split) draw_date(canvas, dt, cfg);
 }
 
 void init_clock_config(ClockConfig* cfg) {
